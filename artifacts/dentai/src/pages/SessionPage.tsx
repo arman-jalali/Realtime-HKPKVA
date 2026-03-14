@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Mic, Square, CheckCircle2, Circle, Loader2, Download, Send, ChevronDown, ChevronUp, User } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import { DentalChart } from "@/components/DentalChart";
@@ -10,7 +10,7 @@ import {
   mockTranscription, 
   processingSteps, 
   treatmentPlan, 
-  costOptions 
+  treatmentAlternatives
 } from "@/data/mock";
 
 type SessionState = 'idle' | 'recording' | 'processing' | 'plan_ready';
@@ -33,6 +33,7 @@ export function setPersistedSelectedPlan(plan: string) {
 }
 
 export default function SessionPage() {
+  const [, navigate] = useLocation();
   const [sessionState, setSessionStateRaw] = useState<SessionState>(persistedState);
 
   const setSessionState = (s: SessionState) => {
@@ -91,6 +92,7 @@ export default function SessionPage() {
         clearInterval(interval);
         setTimeout(() => {
           setSessionState('plan_ready');
+          navigate('/patient-view');
         }, 800);
       }
     }, 800);
@@ -367,19 +369,15 @@ export default function SessionPage() {
                   {/* TAB: KOSTEN */}
                   {activeTab === 'kosten' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 grid grid-cols-1 gap-6">
-                      {costOptions.map((option) => (
+                      {treatmentAlternatives.map((option) => (
                         <div 
                           key={option.id}
                           onClick={() => setSelectedPlan(option.id)}
                           className={cn(
                             "relative rounded-2xl border-2 transition-all duration-300 cursor-pointer p-6",
-                            selectedPlan === option.id ? "shadow-md scale-[1.02]" : "hover:shadow-md",
-                            option.theme === 'green' && selectedPlan === option.id ? "border-teal-500 bg-teal-50/30" : 
-                            option.theme === 'green' ? "border-teal-200 bg-teal-50/10" :
-                            option.theme === 'amber' && selectedPlan === option.id ? "border-amber-500 bg-amber-50/30" :
-                            option.theme === 'amber' ? "border-amber-200 bg-amber-50/10" :
-                            option.theme === 'gray' && selectedPlan === option.id ? "border-slate-400 bg-slate-50" :
-                            "border-slate-200 bg-white"
+                            selectedPlan === option.id
+                              ? "border-teal-500 bg-teal-50/30 shadow-md scale-[1.02]"
+                              : "border-slate-200 bg-white hover:shadow-md"
                           )}
                         >
                           {option.recommended && (
@@ -391,7 +389,7 @@ export default function SessionPage() {
                           <div className="flex justify-between items-start mb-4">
                             <div>
                               <h3 className="text-xl font-bold text-slate-900">{option.name}</h3>
-                              <p className="text-sm text-slate-500 mt-1 max-w-md">{option.summary}</p>
+                              <p className="text-sm text-slate-500 mt-1 max-w-md">{option.description}</p>
                             </div>
                             <div className="text-right">
                               <div className="text-xs text-slate-500 font-semibold uppercase mb-1">Ihr Eigenanteil</div>
@@ -429,18 +427,18 @@ export default function SessionPage() {
                                   className="overflow-hidden"
                                 >
                                   <div className="pt-4 space-y-3">
-                                    {option.breakdown.map((item, idx) => (
+                                    {option.positions.map((pos, idx) => (
                                       <div key={idx} className="flex justify-between text-sm items-center">
                                         <div className="flex items-center gap-2">
                                           <span className="text-xl">🦷</span>
                                           <div>
-                                            <span className="text-slate-700">{item.desc}</span>
-                                            <span className="ml-2 font-mono text-xs text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">{item.code}</span>
+                                            <span className="text-slate-700">{pos.desc}</span>
+                                            <span className="ml-2 font-mono text-xs text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">{pos.code}</span>
                                           </div>
                                         </div>
                                         <div className="text-right">
-                                          <div className="font-medium">{formatCurrency(item.cost)}</div>
-                                          <div className="text-[10px] text-slate-400">Eigenanteil: {formatCurrency(item.patientShare)}</div>
+                                          <div className="font-medium">{formatCurrency(pos.cost)}</div>
+                                          <div className="text-[10px] text-slate-400">Eigenanteil: {formatCurrency(pos.patientShare)}</div>
                                         </div>
                                       </div>
                                     ))}
