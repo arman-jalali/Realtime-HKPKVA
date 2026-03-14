@@ -48,41 +48,37 @@ export default function SessionPage() {
     return () => clearInterval(interval);
   }, [sessionState]);
 
-  // Typewriter effect
   useEffect(() => {
-    if (sessionState === 'recording') {
-      let i = 0;
-      setTypedTranscription("");
-      const typeInterval = setInterval(() => {
-        if (i < mockTranscription.length) {
-          setTypedTranscription(prev => prev + mockTranscription.charAt(i));
-          i++;
-        } else {
-          clearInterval(typeInterval);
-        }
-      }, 30);
-      return () => clearInterval(typeInterval);
-    }
+    if (sessionState !== 'recording') return;
+    let i = 0;
+    setTypedTranscription("");
+    const typeInterval = setInterval(() => {
+      if (i < mockTranscription.length) {
+        setTypedTranscription(prev => prev + mockTranscription.charAt(i));
+        i++;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 30);
+    return () => clearInterval(typeInterval);
   }, [sessionState]);
 
-  // Processing steps logic
   useEffect(() => {
-    if (sessionState === 'processing') {
-      setCurrentStepIndex(0);
-      let step = 0;
-      const interval = setInterval(() => {
-        step++;
-        if (step < processingSteps.length) {
-          setCurrentStepIndex(step);
-        } else {
-          clearInterval(interval);
-          setTimeout(() => {
-            setSessionState('plan_ready');
-          }, 800);
-        }
-      }, 800);
-      return () => clearInterval(interval);
-    }
+    if (sessionState !== 'processing') return;
+    setCurrentStepIndex(0);
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      if (step < processingSteps.length) {
+        setCurrentStepIndex(step);
+      } else {
+        clearInterval(interval);
+        setTimeout(() => {
+          setSessionState('plan_ready');
+        }, 800);
+      }
+    }, 800);
+    return () => clearInterval(interval);
   }, [sessionState]);
 
   const formatTime = (seconds: number) => {
@@ -419,7 +415,10 @@ export default function SessionPage() {
                                       <div key={idx} className="flex justify-between text-sm items-center">
                                         <div className="flex items-center gap-2">
                                           <span className="text-xl">🦷</span>
-                                          <span className="text-slate-700">{item.desc}</span>
+                                          <div>
+                                            <span className="text-slate-700">{item.desc}</span>
+                                            <span className="ml-2 font-mono text-xs text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">{item.code}</span>
+                                          </div>
                                         </div>
                                         <div className="text-right">
                                           <div className="font-medium">{formatCurrency(item.cost)}</div>
@@ -433,14 +432,32 @@ export default function SessionPage() {
                             </AnimatePresence>
                           </div>
                           
-                          {/* Selection indicator */}
-                          <div className="absolute top-6 right-6">
-                             <div className={cn(
-                               "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                               selectedPlan === option.id ? "border-teal-600 bg-teal-600" : "border-slate-300"
-                             )}>
-                               {selectedPlan === option.id && <CheckCircle2 className="w-4 h-4 text-white" />}
-                             </div>
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={cn(
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                                selectedPlan === option.id ? "border-teal-600 bg-teal-600" : "border-slate-300"
+                              )}>
+                                {selectedPlan === option.id && <CheckCircle2 className="w-3 h-3 text-white" />}
+                              </div>
+                              <span className="text-sm text-slate-500">
+                                {selectedPlan === option.id ? "Ausgewählt" : ""}
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPlan(option.id);
+                              }}
+                              className={cn(
+                                "px-5 py-2 rounded-lg font-semibold text-sm transition-all",
+                                selectedPlan === option.id
+                                  ? "bg-teal-600 text-white shadow-md"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                              )}
+                            >
+                              Auswählen
+                            </button>
                           </div>
                         </div>
                       ))}

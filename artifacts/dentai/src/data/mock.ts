@@ -53,8 +53,8 @@ export const costOptions = [
     summary: "NEM-Kronen (Nicht-Edelmetall), funktional aber eingeschränkte Ästhetik",
     features: ["Regelversorgung der Kassen", "Sichtbare Metallränder möglich", "Ausreichende Haltbarkeit"],
     breakdown: [
-      { desc: "Krone Zahn 34 (NEM)", cost: 340, patientShare: 100 },
-      { desc: "Krone Zahn 45 (NEM)", cost: 340, patientShare: 100 }
+      { desc: "Krone Zahn 34 (NEM)", code: "BEMA 20a", cost: 340, patientShare: 100 },
+      { desc: "Krone Zahn 45 (NEM)", code: "BEMA 20a", cost: 340, patientShare: 100 }
     ]
   },
   {
@@ -68,8 +68,8 @@ export const costOptions = [
     summary: "Empfohlener Kompromiss: Metallkeramik im Seitenzahnbereich, Vollkeramik im sichtbaren Bereich",
     features: ["Zahnfarbene Verblendung", "Gute Ästhetik & Haltbarkeit", "Biokompatibel (Zahn 45)"],
     breakdown: [
-      { desc: "Krone Zahn 34 (VMK)", cost: 520, patientShare: 280 },
-      { desc: "Krone Zahn 45 (Vollkeramik)", cost: 720, patientShare: 480 }
+      { desc: "Krone Zahn 34 (VMK)", code: "GOZ 2210", cost: 520, patientShare: 280 },
+      { desc: "Krone Zahn 45 (Vollkeramik)", code: "GOZ 2210", cost: 720, patientShare: 480 }
     ]
   },
   {
@@ -82,8 +82,8 @@ export const costOptions = [
     summary: "Beide Kronen in Vollkeramik (Zirkon), höchste Ästhetik und Verträglichkeit",
     features: ["Perfekte, natürliche Optik", "Keine dunklen Ränder", "Höchste Körperverträglichkeit"],
     breakdown: [
-      { desc: "Krone Zahn 34 (Vollkeramik)", cost: 945, patientShare: 705 },
-      { desc: "Krone Zahn 45 (Vollkeramik)", cost: 945, patientShare: 705 }
+      { desc: "Krone Zahn 34 (Vollkeramik)", code: "GOZ 2210", cost: 945, patientShare: 705 },
+      { desc: "Krone Zahn 45 (Vollkeramik)", code: "GOZ 2210", cost: 945, patientShare: 705 }
     ]
   }
 ];
