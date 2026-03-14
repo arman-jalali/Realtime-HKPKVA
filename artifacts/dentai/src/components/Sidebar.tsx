@@ -19,9 +19,8 @@ export function Sidebar() {
         <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center">
           <Activity className="w-5 h-5 text-white" />
         </div>
-        <span className="font-display font-bold text-xl tracking-tight">RealCost</span>
+        <span className="font-display font-bold text-xl tracking-tight">DecisionTree</span>
       </div>
-      
       <nav className="flex-1 px-4 py-6 space-y-2">
         {links.map((link) => {
           const isActive = location === link.href;
@@ -56,7 +55,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
       <div className="p-6">
         <div className="flex items-center gap-3 bg-slate-800 rounded-xl p-3">
           <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm">
