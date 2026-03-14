@@ -99,6 +99,40 @@ export const treatmentAlternatives: TreatmentAlternative[] = [
 // The single dentist-approved plan shown to the patient
 export const currentPlan = treatmentAlternatives[1]; // Vollkeramik — dentist decision
 
+// Revised plan after dentist voice-edits (mixed: Zahn 34 NEM, Zahn 45 Zirkon)
+export const revisedPlan: TreatmentAlternative = {
+  id: "mixed",
+  name: "Angepasster Plan",
+  tagline: "Zahn 34: NEM · Zahn 45: Zirkon (gemischt)",
+  description: "Zahn 34 wird mit einer bewährten NEM-Krone versorgt. Zahn 45 erhält die hochwertige Zirkonkrone für optimale Ästhetik im sichtbaren Bereich.",
+  total: 1285,
+  insurance: 480,
+  patient: 805,
+  highlights: [
+    "Kostengünstiger für den weniger sichtbaren Zahn 34",
+    "Zahn 45: Zirkon für beste Ästhetik",
+    "Kasse übernimmt Festzuschuss auf beiden Zähnen",
+    "Lieferzeit: ca. 2 Wochen"
+  ],
+  positions: [
+    { tooth: 34, desc: "Präparation Krone Zahn 34", patientDesc: "Vorbereitung des Zahns für die Krone", code: "BEMA 20a", type: "GKV", cost: 60, patientShare: 0 },
+    { tooth: 34, desc: "NEM-Metallkeramik-Krone Zahn 34", patientDesc: "Metallkeramik-Krone (NEM-Legierung)", code: "BEL-II Nr. 1", type: "Labor", cost: 280, patientShare: 100 },
+    { tooth: 45, desc: "Präparation Krone Zahn 45", patientDesc: "Vorbereitung des Zahns für die Krone", code: "BEMA 20a", type: "GKV", cost: 60, patientShare: 0 },
+    { tooth: 45, desc: "Vollkeramik-Zirkondioxidkrone Zahn 45", patientDesc: "Hochwertige Zirkonkrone (metallgrei)", code: "GOZ 2210", type: "Privat", cost: 885, patientShare: 705 }
+  ]
+};
+
+export const mockRevisionTranscription = "Ändere Zahn 34 auf Kassenversorgung – NEM-Krone reicht dort, der Zahn liegt weiter hinten. Zahn 45 bleibt Vollkeramik Zirkon.";
+
+export const revisionSteps = [
+  { id: 1, label: "Änderungsanweisung erkannt" },
+  { id: 2, label: "Zahn 34: NEM-Krone wird zugeordnet..." },
+  { id: 3, label: "BEMA/GOZ Codes werden aktualisiert..." },
+  { id: 4, label: "Eigenanteil wird neu berechnet..." },
+  { id: 5, label: "Regelvalidierung..." },
+  { id: 6, label: "Plan wird aktualisiert..." }
+];
+
 export const treatmentPlan = [
   { pos: 1, desc: "Präparation Krone Zahn 34", code: "BEMA 20a", type: "GKV" },
   { pos: 2, desc: "VMK-Krone Zahn 34", code: "BEL-II Nr. 1", type: "Labor" },
