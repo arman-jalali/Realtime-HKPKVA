@@ -17,8 +17,19 @@ type SessionState = 'idle' | 'recording' | 'processing' | 'plan_ready';
 
 let persistedState: SessionState = 'idle';
 
+let persistedSelectedPlan = 'standard';
+
 export function resetSessionState() {
   persistedState = 'idle';
+  persistedSelectedPlan = 'standard';
+}
+
+export function getSelectedPlan() {
+  return persistedSelectedPlan;
+}
+
+export function setPersistedSelectedPlan(plan: string) {
+  persistedSelectedPlan = plan;
 }
 
 export default function SessionPage() {
@@ -33,7 +44,12 @@ export default function SessionPage() {
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [activeTab, setActiveTab] = useState<'plan' | 'kosten' | 'hkp'>('plan');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<string>("standard");
+  const [selectedPlan, setSelectedPlanRaw] = useState<string>(persistedSelectedPlan);
+
+  const setSelectedPlan = (plan: string) => {
+    persistedSelectedPlan = plan;
+    setSelectedPlanRaw(plan);
+  };
 
   // Timer logic
   useEffect(() => {
@@ -359,7 +375,9 @@ export default function SessionPage() {
                             "relative rounded-2xl border-2 transition-all duration-300 cursor-pointer p-6",
                             selectedPlan === option.id ? "shadow-md scale-[1.02]" : "hover:shadow-md",
                             option.theme === 'green' && selectedPlan === option.id ? "border-teal-500 bg-teal-50/30" : 
+                            option.theme === 'green' ? "border-teal-200 bg-teal-50/10" :
                             option.theme === 'amber' && selectedPlan === option.id ? "border-amber-500 bg-amber-50/30" :
+                            option.theme === 'amber' ? "border-amber-200 bg-amber-50/10" :
                             option.theme === 'gray' && selectedPlan === option.id ? "border-slate-400 bg-slate-50" :
                             "border-slate-200 bg-white"
                           )}

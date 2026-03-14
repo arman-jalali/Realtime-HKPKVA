@@ -2,11 +2,14 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { Check, ArrowRight } from "lucide-react";
-import { patientData } from "@/data/mock";
-import { resetSessionState } from "./SessionPage";
+import { patientData, costOptions } from "@/data/mock";
+import { resetSessionState, getSelectedPlan } from "./SessionPage";
+import { formatCurrency } from "@/lib/utils";
 
 export default function SubmittedPage() {
   const [, navigate] = useLocation();
+  const selectedPlanId = getSelectedPlan();
+  const selectedOption = costOptions.find(o => o.id === selectedPlanId) || costOptions[1];
 
   const handleNextPatient = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -52,11 +55,11 @@ export default function SubmittedPage() {
                 </div>
                 <div className="flex justify-between border-b border-slate-200 pb-3">
                   <span className="text-slate-500">Gewählter Plan</span>
-                  <span className="font-medium text-teal-700">Option A — Standard</span>
+                  <span className="font-medium text-teal-700">{selectedOption.name}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-200 pb-3">
                   <span className="text-slate-500">Eigenanteil</span>
-                  <span className="font-bold text-slate-900">760,00 €</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(selectedOption.patient)}</span>
                 </div>
                 <div className="flex justify-between pb-1">
                   <span className="text-slate-500">Bearbeitungszeit</span>
