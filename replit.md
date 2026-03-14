@@ -21,7 +21,8 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ```text
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
+│   ├── api-server/         # Express API server
+│   └── dentai/             # DentAI — AI dental billing assistant (React + Vite)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
@@ -49,6 +50,28 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
 ## Packages
+
+### `artifacts/dentai` (`@workspace/dentai`)
+
+DentAI — AI-powered dental billing assistant for German dental practices. Frontend-only React + Vite app using wouter for routing, framer-motion for animations, and Tailwind CSS for styling.
+
+- **Purpose**: Dentist speaks treatment plan aloud → app generates HKP/KVA with cost alternatives (Basis/Standard/Premium) → patient picks their option
+- **Design**: Deep teal (#0F766E) primary, amber (#F59E0B) accent, off-white (#F8FAFC) bg, DM Sans / Inter / JetBrains Mono fonts
+- **Routes**:
+  - `/` — Session screen: patient info, dental chart (FDI), voice input, AI processing, treatment plan tabs (Behandlungsplan/Kostenübersicht/HKP)
+  - `/patient-view` — Patient-friendly pricing view with 3 cost tier cards
+  - `/submitted` — Submission confirmation with summary + timeline
+- **Key files**:
+  - `src/pages/SessionPage.tsx` — Main 4-state voice flow (idle → recording → processing → plan)
+  - `src/pages/PatientViewPage.tsx` — Patient cost selection view
+  - `src/pages/SubmittedPage.tsx` — Submission confirmation
+  - `src/components/DentalChart.tsx` — SVG dental chart with FDI numbering
+  - `src/components/Sidebar.tsx` — Dark teal navigation sidebar
+  - `src/data/mock.ts` — All mock patient/treatment/billing data
+  - `src/lib/utils.ts` — Utility functions including formatCurrency (German locale)
+- **Dependencies**: react, wouter, framer-motion, lucide-react, tailwindcss, clsx, tailwind-merge
+- **Mock data**: Patient Klaus Schmidt, AOK Nordost GKV, teeth 34 (VMK) + 45 (Vollkeramik), 3 cost tiers
+- **All text in German** — currency formatted as European style (€1.240,00)
 
 ### `artifacts/api-server` (`@workspace/api-server`)
 

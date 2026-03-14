@@ -1,0 +1,12 @@
+packages:
+  "framer-motion": "For smooth state transitions, animated checklists, and staggered card reveals"
+  "clsx": "For conditional class names merging"
+  "tailwind-merge": "For merging tailwind classes safely"
+  "lucide-react": "For UI icons across all screens"
+
+images: []
+
+notes:
+  - "The app operates entirely with embedded mock data to facilitate the hackathon demo without requiring a live backend."
+  - "The wouter routing handles all navigation between the 3 main states: Session, Patient View, and Submission."
+  - "Animations heavily rely on Framer Motion for the processing sequence and patient-view reveals."
