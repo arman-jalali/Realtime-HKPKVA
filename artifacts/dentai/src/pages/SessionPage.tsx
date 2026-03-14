@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "wouter";
-import { Mic, Square, CheckCircle2, Circle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Mic, Square, CheckCircle2, Circle, Loader2, Download, Send, ChevronDown, ChevronUp, User } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import { DentalChart } from "@/components/DentalChart";
 import { cn, formatCurrency } from "@/lib/utils";
-import {
-  patientData,
-  mockTranscription,
-  processingSteps,
-  treatmentPlan,
+import { 
+  patientData, 
+  mockTranscription, 
+  processingSteps, 
+  treatmentPlan, 
   treatmentAlternatives
 } from "@/data/mock";
 
 type SessionState = 'idle' | 'recording' | 'processing' | 'plan_ready';
 
 let persistedState: SessionState = 'idle';
+
 let persistedSelectedPlan = 'standard';
 
 export function resetSessionState() {
@@ -39,11 +40,10 @@ export default function SessionPage() {
     persistedState = s;
     setSessionStateRaw(s);
   };
-
   const [recordingTime, setRecordingTime] = useState(0);
   const [typedTranscription, setTypedTranscription] = useState("");
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
-  const [activeTab, setActiveTab] = useState<'plan' | 'kosten'>('plan');
+  const [activeTab, setActiveTab] = useState<'plan' | 'kosten' | 'hkp'>('plan');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlanRaw] = useState<string>(persistedSelectedPlan);
 
@@ -52,10 +52,13 @@ export default function SessionPage() {
     setSelectedPlanRaw(plan);
   };
 
+  // Timer logic
   useEffect(() => {
     let interval: number;
     if (sessionState === 'recording') {
-      interval = window.setInterval(() => setRecordingTime(prev => prev + 1), 1000);
+      interval = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
     } else {
       setRecordingTime(0);
     }
@@ -66,214 +69,218 @@ export default function SessionPage() {
     if (sessionState !== 'recording') return;
     let i = 0;
     setTypedTranscription("");
-    const iv = setInterval(() => {
+    const typeInterval = setInterval(() => {
       if (i < mockTranscription.length) {
         setTypedTranscription(prev => prev + mockTranscription.charAt(i));
         i++;
       } else {
-        clearInterval(iv);
+        clearInterval(typeInterval);
       }
     }, 30);
-    return () => clearInterval(iv);
+    return () => clearInterval(typeInterval);
   }, [sessionState]);
 
   useEffect(() => {
     if (sessionState !== 'processing') return;
     setCurrentStepIndex(0);
     let step = 0;
-    const iv = setInterval(() => {
+    const interval = setInterval(() => {
       step++;
       if (step < processingSteps.length) {
         setCurrentStepIndex(step);
       } else {
-        clearInterval(iv);
+        clearInterval(interval);
         setTimeout(() => {
           setSessionState('plan_ready');
           navigate('/patient-view');
         }, 800);
       }
     }, 800);
-    return () => clearInterval(iv);
+    return () => clearInterval(interval);
   }, [sessionState]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+    return `00:${m}:${s}`;
   };
 
-  const typeColors: Record<string, string> = {
-    GKV: "bg-blue-50 text-blue-700",
-    Privat: "bg-slate-100 text-slate-700",
-    Labor: "bg-neutral-100 text-neutral-600",
-  };
+  const startRecording = () => setSessionState('recording');
+  const stopRecording = () => setSessionState('processing');
 
   return (
-    <div className="min-h-screen bg-background flex pl-56">
+    <div className="min-h-screen bg-background flex pl-64">
       <Sidebar />
-
+      
       <main className="flex-1 p-8 h-screen overflow-hidden flex gap-8">
-
-        {/* LEFT: Patient context */}
-        <div className="w-[38%] flex flex-col gap-0 h-full overflow-y-auto pb-20">
-          <h1 className="text-xl font-bold text-foreground mb-6">Patientensitzung</h1>
-
-          {/* Patient card — flat, ruled, no shadow */}
-          <div className="border border-border rounded-md bg-card mb-5">
-            <div className="px-5 py-4 flex justify-between items-start border-b border-border">
+        
+        {/* LEFT COLUMN: Context */}
+        <div className="w-[40%] flex flex-col gap-6 h-full overflow-y-auto pb-24 pr-2">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Patientensitzung</h1>
+          
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4">
+            <div className="flex justify-between items-start">
               <div>
-                <div className="text-base font-bold text-foreground">{patientData.name}</div>
-                <div className="text-sm text-muted-foreground mt-0.5">geb. {patientData.dob}</div>
+                <h2 className="text-xl font-bold text-slate-900">{patientData.name}</h2>
+                <p className="text-slate-500 mt-1">geb. {patientData.dob}</p>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+              <div className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium border border-emerald-200 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 Im Raum
               </div>
             </div>
-
-            <div className="grid grid-cols-2 divide-x divide-border">
-              <div className="px-5 py-3 border-b border-border">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Versicherung</div>
-                <div className="text-sm font-medium text-foreground flex items-center gap-2">
-                  {patientData.insurance}
-                  <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-sm">{patientData.insuranceType}</span>
+            
+            <div className="grid grid-cols-2 gap-4 mt-2 pt-4 border-t border-slate-100">
+              <div>
+                <p className="text-xs text-slate-400 mb-1 uppercase tracking-wider font-semibold">Versicherung</p>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-slate-900">{patientData.insurance}</span>
+                  <span className="bg-teal-50 text-teal-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase">{patientData.insuranceType}</span>
                 </div>
               </div>
-              <div className="px-5 py-3 border-b border-border">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Zuschuss</div>
-                <div className="text-sm font-semibold text-foreground">{patientData.bonus}</div>
+              <div>
+                <p className="text-xs text-slate-400 mb-1 uppercase tracking-wider font-semibold">Zuschuss</p>
+                <p className="font-medium text-amber-600">{patientData.bonus}</p>
               </div>
-              <div className="px-5 py-3 col-span-2">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Versichertennummer</div>
-                <div className="font-mono text-sm text-foreground">{patientData.insuranceNumber}</div>
+              <div>
+                <p className="text-xs text-slate-400 mb-1 uppercase tracking-wider font-semibold">Versichertennummer</p>
+                <p className="font-mono text-sm text-slate-700">{patientData.insuranceNumber}</p>
               </div>
             </div>
           </div>
 
           <DentalChart highlightedTeeth={[34, 45]} darkTeeth={[36]} />
 
-          {/* Visit history — no card wrapper, just ruled list */}
-          <div className="mt-5 border border-border rounded-md bg-card">
-            <div className="px-5 py-3 border-b border-border">
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Letzte Besuche</div>
-            </div>
-            <div className="divide-y divide-border">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Letzte Besuche</h3>
+            <div className="flex flex-col gap-3">
               {patientData.history.map((h, i) => (
-                <div key={i} className="px-5 py-3 flex gap-5">
-                  <div className="text-xs font-mono text-muted-foreground shrink-0 pt-0.5">{h.date}</div>
-                  <div className="text-sm text-foreground">{h.text}</div>
+                <div key={i} className="flex gap-4">
+                  <div className="text-sm text-slate-500 font-mono shrink-0">{h.date}</div>
+                  <div className="text-sm text-slate-700">{h.text}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* RIGHT: Interaction */}
-        <div className="flex-1 flex flex-col h-full relative">
+        {/* RIGHT COLUMN: AI Interaction */}
+        <div className="w-[60%] flex flex-col h-full relative">
           <AnimatePresence mode="wait">
-
-            {/* IDLE */}
+            
+            {/* STATE 1: IDLE */}
             {sessionState === 'idle' && (
-              <motion.div
+              <motion.div 
                 key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col items-center justify-center border border-border rounded-md bg-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-3xl shadow-sm border border-slate-200 p-12"
               >
-                <button
-                  onClick={() => setSessionState('recording')}
+                <button 
+                  onClick={startRecording}
                   data-testid="button-start-recording"
-                  className="w-16 h-16 rounded-full border-2 border-foreground flex items-center justify-center text-foreground hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+                  className="mic-pulse w-32 h-32 rounded-full bg-teal-600 flex items-center justify-center text-white shadow-xl shadow-teal-600/20 hover:bg-teal-700 transition-colors cursor-pointer"
                 >
-                  <Mic className="w-6 h-6" />
+                  <Mic className="w-12 h-12" />
                 </button>
-
-                <h2 className="mt-7 text-xl font-bold text-foreground">Therapie per Sprache beschreiben</h2>
-                <p className="mt-2 text-sm text-muted-foreground max-w-sm text-center leading-relaxed">
+                <h2 className="mt-8 text-2xl font-bold text-slate-900">Therapie per Sprache beschreiben</h2>
+                <p className="mt-3 text-slate-500 max-w-md">
                   Drücken Sie den Button und beschreiben Sie den Behandlungsplan natürlich. Die KI ordnet automatisch alle BEMA/GOZ Codes zu.
                 </p>
-
-                <div className="mt-10 border-t border-border w-full max-w-sm">
-                  <p className="text-xs text-muted-foreground mt-4 mb-2">Beispiele</p>
-                  <p className="text-sm text-foreground/70 italic">"Krone auf Zahn 34, VMK, und Krone auf 45, Vollkeramik"</p>
-                  <p className="text-sm text-foreground/70 italic mt-1.5">"Implantat regio 36 mit Keramikkrone"</p>
+                
+                <div className="mt-12 bg-slate-50 p-6 rounded-2xl border border-slate-100 max-w-lg">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Beispiele:</p>
+                  <p className="text-sm text-slate-600 italic">"Krone auf Zahn 34, VMK, und Krone auf 45, Vollkeramik"</p>
+                  <p className="text-sm text-slate-600 italic mt-2">"Implantat regio 36 mit Keramikkrone"</p>
                 </div>
               </motion.div>
             )}
 
-            {/* RECORDING */}
+            {/* STATE 2: RECORDING */}
             {sessionState === 'recording' && (
-              <motion.div
+              <motion.div 
                 key="recording"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col items-center justify-center border border-red-300 rounded-md bg-card"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-3xl shadow-sm border border-slate-200 p-12 relative overflow-hidden"
               >
-                <div className="w-full max-w-lg px-8 flex flex-col items-center">
-                  {/* Waveform */}
-                  <div className="flex items-center gap-1.5 h-12 mb-6">
+                <div className="absolute inset-0 bg-red-50/50"></div>
+                
+                <div className="relative z-10 flex flex-col items-center w-full max-w-xl">
+                  <div className="flex items-center gap-2 h-24 mb-8">
                     {[...Array(7)].map((_, i) => (
-                      <div key={i} className="waveform-bar w-1.5 bg-foreground rounded-full h-full origin-bottom" />
+                      <div key={i} className="waveform-bar w-3 bg-red-500 rounded-full h-full transform origin-bottom"></div>
                     ))}
                   </div>
 
-                  <div className="font-mono text-3xl font-medium text-red-600 mb-6 tabular-nums tracking-widest">
+                  <div className="text-4xl font-mono font-light text-red-600 mb-8 tracking-widest">
                     {formatTime(recordingTime)}
                   </div>
 
-                  {/* Transcription */}
-                  <div className="w-full border border-border rounded-md p-4 min-h-[100px] mb-8 bg-background">
-                    <p className="text-sm text-foreground leading-relaxed">
+                  <div className="w-full bg-white/80 backdrop-blur rounded-2xl p-6 border border-red-100 shadow-sm min-h-[120px] text-left mb-10">
+                    <p className="text-lg text-slate-800 leading-relaxed">
                       {typedTranscription}
-                      <span className="inline-block w-px h-4 bg-foreground ml-0.5 align-middle animate-pulse" />
+                      <span className="inline-block w-2 h-5 bg-teal-500 ml-1 animate-pulse"></span>
                     </p>
                   </div>
 
-                  <button
-                    onClick={() => setSessionState('processing')}
+                  <button 
+                    onClick={stopRecording}
                     data-testid="button-stop-recording"
-                    className="flex items-center gap-2.5 px-6 py-2.5 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors"
+                    className="flex items-center gap-3 px-8 py-4 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg shadow-lg shadow-red-600/20 transition-all hover:-translate-y-1 active:translate-y-0"
                   >
-                    <Square className="w-4 h-4 fill-current" />
+                    <Square className="w-5 h-5 fill-current" />
                     Aufnahme stoppen
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* PROCESSING */}
+            {/* STATE 3: PROCESSING */}
             {sessionState === 'processing' && (
-              <motion.div
+              <motion.div 
                 key="processing"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col justify-center border border-border rounded-md bg-card px-16"
+                className="flex-1 flex flex-col justify-center bg-white rounded-3xl shadow-sm border border-slate-200 p-16"
               >
-                <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">KI analysiert</div>
-                <h2 className="text-xl font-bold text-foreground mb-8">Heil- und Kostenplan wird erstellt</h2>
-
-                <div className="space-y-4 max-w-sm">
-                  {processingSteps.map((step, i) => {
-                    const done = i < currentStepIndex;
-                    const active = i === currentStepIndex;
+                <h2 className="text-2xl font-bold text-slate-900 mb-10 text-center">KI erstellt Heil- und Kostenplan</h2>
+                
+                <div className="max-w-md mx-auto w-full space-y-6">
+                  {processingSteps.map((step, index) => {
+                    const isCompleted = index < currentStepIndex;
+                    const isActive = index === currentStepIndex;
+                    const isPending = index > currentStepIndex;
+                    
                     return (
-                      <motion.div
+                      <motion.div 
                         key={step.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: i <= currentStepIndex ? 1 : 0.25 }}
-                        className="flex items-center gap-3"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: isPending ? 0.3 : 1, x: 0 }}
+                        className={cn(
+                          "flex items-center gap-4 transition-all duration-300",
+                          isActive ? "scale-105" : "scale-100"
+                        )}
                       >
-                        <div className="w-5 h-5 shrink-0 flex items-center justify-center">
-                          {done && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
-                          {active && <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />}
-                          {!done && !active && <Circle className="w-4 h-4 text-border" />}
+                        <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                          {isCompleted && (
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+                              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                            </motion.div>
+                          )}
+                          {isActive && (
+                            <Loader2 className="w-7 h-7 text-teal-600 animate-spin" />
+                          )}
+                          {isPending && (
+                            <Circle className="w-7 h-7 text-slate-300" />
+                          )}
                         </div>
                         <span className={cn(
-                          "text-sm",
-                          done ? "text-muted-foreground line-through" : active ? "text-foreground font-medium" : "text-muted-foreground"
+                          "text-lg font-medium",
+                          isCompleted ? "text-slate-700" : isActive ? "text-teal-700" : "text-slate-400"
                         )}>
                           {step.label}
                         </span>
@@ -284,54 +291,70 @@ export default function SessionPage() {
               </motion.div>
             )}
 
-            {/* PLAN READY — dead state, navigation goes to /patient-view */}
+            {/* STATE 4: PLAN READY */}
             {sessionState === 'plan_ready' && (
-              <motion.div
+              <motion.div 
                 key="plan_ready"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col border border-border rounded-md bg-card overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex-1 flex flex-col bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden"
               >
-                {/* Tabs */}
-                <div className="flex border-b border-border px-6 gap-6 bg-background/50">
-                  {(['plan', 'kosten'] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={cn(
-                        "py-3.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-                        activeTab === tab
-                          ? "border-foreground text-foreground"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {tab === 'plan' ? 'Behandlungsplan' : 'Kostenübersicht'}
-                    </button>
-                  ))}
+                {/* Tabs Header */}
+                <div className="flex border-b border-slate-200 bg-slate-50/50 px-6 pt-4 gap-6">
+                  <button 
+                    onClick={() => setActiveTab('plan')}
+                    className={cn("pb-4 text-sm font-bold border-b-2 transition-colors", activeTab === 'plan' ? "border-teal-600 text-teal-700" : "border-transparent text-slate-500 hover:text-slate-700")}
+                  >
+                    Behandlungsplan
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('kosten')}
+                    className={cn("pb-4 text-sm font-bold border-b-2 transition-colors", activeTab === 'kosten' ? "border-teal-600 text-teal-700" : "border-transparent text-slate-500 hover:text-slate-700")}
+                  >
+                    Kostenübersicht
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('hkp')}
+                    className={cn("pb-4 text-sm font-bold border-b-2 transition-colors", activeTab === 'hkp' ? "border-teal-600 text-teal-700" : "border-transparent text-slate-500 hover:text-slate-700")}
+                  >
+                    HKP Dokument
+                  </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6">
-
+                {/* Tab Content */}
+                <div className="flex-1 overflow-y-auto p-6 pb-32">
+                  
+                  {/* TAB: PLAN */}
                   {activeTab === 'plan' && (
-                    <div>
-                      <div className="border border-border rounded-md overflow-hidden">
-                        <table className="w-full text-sm text-left">
-                          <thead className="bg-muted text-muted-foreground text-xs uppercase tracking-wider">
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div className="bg-teal-50 border border-teal-100 rounded-xl p-5 mb-6">
+                        <div className="text-teal-800 font-semibold mb-1">Geplante Behandlung: Kronenversorgung</div>
+                        <div className="text-teal-600 text-sm">Zähne: 34 (VMK-Krone), 45 (Vollkeramik-Krone)</div>
+                      </div>
+
+                      <div className="border border-slate-200 rounded-xl overflow-hidden">
+                        <table className="w-full text-left">
+                          <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                             <tr>
-                              <th className="px-4 py-3 border-b border-border font-semibold">Pos</th>
-                              <th className="px-4 py-3 border-b border-border font-semibold">Beschreibung</th>
-                              <th className="px-4 py-3 border-b border-border font-semibold">Code</th>
-                              <th className="px-4 py-3 border-b border-border font-semibold">Typ</th>
+                              <th className="p-4 border-b">Pos</th>
+                              <th className="p-4 border-b">Beschreibung</th>
+                              <th className="p-4 border-b">Code</th>
+                              <th className="p-4 border-b">Typ</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-border">
+                          <tbody className="divide-y divide-slate-100">
                             {treatmentPlan.map((item) => (
-                              <tr key={item.pos} className="hover:bg-muted/40">
-                                <td className="px-4 py-3 text-muted-foreground font-mono">{item.pos}</td>
-                                <td className="px-4 py-3 font-medium text-foreground">{item.desc}</td>
-                                <td className="px-4 py-3 font-mono text-xs text-blue-700">{item.code}</td>
-                                <td className="px-4 py-3">
-                                  <span className={cn("text-xs px-2 py-0.5 rounded-sm font-medium", typeColors[item.type])}>
+                              <tr key={item.pos} className="hover:bg-slate-50/50">
+                                <td className="p-4 text-slate-500">{item.pos}</td>
+                                <td className="p-4 font-medium text-slate-900">{item.desc}</td>
+                                <td className="p-4 font-mono text-sm text-teal-700 bg-teal-50/30">{item.code}</td>
+                                <td className="p-4">
+                                  <span className={cn(
+                                    "text-xs px-2 py-1 rounded-md font-medium",
+                                    item.type === 'GKV' ? "bg-emerald-100 text-emerald-800" : 
+                                    item.type === 'Privat' ? "bg-amber-100 text-amber-800" : 
+                                    "bg-blue-100 text-blue-800"
+                                  )}>
                                     {item.type}
                                   </span>
                                 </td>
@@ -343,61 +366,205 @@ export default function SessionPage() {
                     </div>
                   )}
 
+                  {/* TAB: KOSTEN */}
                   {activeTab === 'kosten' && (
-                    <div className="space-y-4">
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 grid grid-cols-1 gap-6">
                       {treatmentAlternatives.map((option) => (
-                        <div
+                        <div 
                           key={option.id}
                           onClick={() => setSelectedPlan(option.id)}
                           className={cn(
-                            "border rounded-md p-5 cursor-pointer transition-all",
+                            "relative rounded-2xl border-2 transition-all duration-300 cursor-pointer p-6",
                             selectedPlan === option.id
-                              ? "border-foreground bg-card"
-                              : "border-border bg-card hover:border-foreground/40"
+                              ? "border-teal-500 bg-teal-50/30 shadow-md scale-[1.02]"
+                              : "border-slate-200 bg-white hover:shadow-md"
                           )}
                         >
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <div className="font-semibold text-foreground">{option.name}</div>
-                              <div className="text-xs text-muted-foreground mt-0.5">{option.tagline}</div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-xs text-muted-foreground mb-0.5">Eigenanteil</div>
-                              <div className="text-2xl font-bold text-foreground font-mono">{formatCurrency(option.patient)}</div>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-6 text-xs text-muted-foreground mb-3">
-                            <span>Gesamt: <span className="text-foreground font-medium">{formatCurrency(option.total)}</span></span>
-                            <span>Kasse: <span className="text-foreground font-medium">{formatCurrency(option.insurance)}</span></span>
-                          </div>
-
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setExpandedCard(expandedCard === option.id ? null : option.id); }}
-                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            Positionen
-                            {expandedCard === option.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                          </button>
-
-                          {expandedCard === option.id && (
-                            <div className="mt-3 border-t border-border pt-3 space-y-2">
-                              {option.positions.map((pos, i) => (
-                                <div key={i} className="flex justify-between text-xs">
-                                  <span className="text-muted-foreground">
-                                    Zahn {pos.tooth} — {pos.desc}
-                                    <span className="ml-2 font-mono text-blue-700">{pos.code}</span>
-                                  </span>
-                                  <span className="font-mono font-medium text-foreground">{formatCurrency(pos.patientShare)}</span>
-                                </div>
-                              ))}
+                          {option.recommended && (
+                            <div className="absolute -top-3 left-6 bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                              Empfohlen
                             </div>
                           )}
+                          
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="text-xl font-bold text-slate-900">{option.name}</h3>
+                              <p className="text-sm text-slate-500 mt-1 max-w-md">{option.description}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs text-slate-500 font-semibold uppercase mb-1">Ihr Eigenanteil</div>
+                              <div className="text-3xl font-bold text-slate-900">{formatCurrency(option.patient)}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-4 text-sm bg-white rounded-lg p-3 border border-slate-100 mb-4">
+                            <div className="flex-1">
+                              <span className="text-slate-500">Gesamtkosten:</span> <span className="font-semibold">{formatCurrency(option.total)}</span>
+                            </div>
+                            <div className="flex-1">
+                              <span className="text-slate-500">Kassenanteil:</span> <span className="font-semibold text-emerald-600">{formatCurrency(option.insurance)}</span>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-slate-100 pt-4">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedCard(expandedCard === option.id ? null : option.id);
+                              }}
+                              className="flex items-center justify-between w-full text-sm font-medium text-slate-600 hover:text-slate-900"
+                            >
+                              <span>Positionen Details ansehen</span>
+                              {expandedCard === option.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+                            
+                            <AnimatePresence>
+                              {expandedCard === option.id && (
+                                <motion.div 
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="pt-4 space-y-3">
+                                    {option.positions.map((pos, idx) => (
+                                      <div key={idx} className="flex justify-between text-sm items-center">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xl">🦷</span>
+                                          <div>
+                                            <span className="text-slate-700">{pos.desc}</span>
+                                            <span className="ml-2 font-mono text-xs text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">{pos.code}</span>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-medium">{formatCurrency(pos.cost)}</div>
+                                          <div className="text-[10px] text-slate-400">Eigenanteil: {formatCurrency(pos.patientShare)}</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                          
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={cn(
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                                selectedPlan === option.id ? "border-teal-600 bg-teal-600" : "border-slate-300"
+                              )}>
+                                {selectedPlan === option.id && <CheckCircle2 className="w-3 h-3 text-white" />}
+                              </div>
+                              <span className="text-sm text-slate-500">
+                                {selectedPlan === option.id ? "Ausgewählt" : ""}
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPlan(option.id);
+                              }}
+                              className={cn(
+                                "px-5 py-2 rounded-lg font-semibold text-sm transition-all",
+                                selectedPlan === option.id
+                                  ? "bg-teal-600 text-white shadow-md"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                              )}
+                            >
+                              Auswählen
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
+
+                  {/* TAB: HKP */}
+                  {activeTab === 'hkp' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div className="bg-[#fcfbf9] border border-stone-200 rounded-xl p-8 shadow-inner font-serif text-stone-800">
+                        <div className="text-center border-b-2 border-stone-800 pb-4 mb-6">
+                          <h2 className="text-2xl font-bold tracking-widest uppercase">Heil- und Kostenplan</h2>
+                          <p className="text-stone-500 mt-1 font-sans text-sm">Zahnärztliche Versorgung</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-8 mb-8 font-sans text-sm">
+                          <div>
+                            <div className="font-bold border-b border-stone-300 mb-2 pb-1">Patientendaten</div>
+                            <div>Name: {patientData.name}</div>
+                            <div>Geboren: {patientData.dob}</div>
+                            <div>Kasse: {patientData.insurance}</div>
+                          </div>
+                          <div>
+                            <div className="font-bold border-b border-stone-300 mb-2 pb-1">Praxis</div>
+                            <div>Dr. med. dent. Schmidt</div>
+                            <div>Musterstraße 123</div>
+                            <div>10115 Berlin</div>
+                          </div>
+                        </div>
+
+                        <div className="mb-8 font-sans text-sm">
+                          <div className="font-bold border-b border-stone-300 mb-2 pb-1">Befund & Therapieplanung</div>
+                          <table className="w-full text-left">
+                            <thead>
+                              <tr className="text-xs text-stone-500">
+                                <th className="pb-2">Zahn</th>
+                                <th className="pb-2">Befund</th>
+                                <th className="pb-2">Therapie</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr className="border-t border-stone-100">
+                                <td className="py-2 font-bold">34</td>
+                                <td className="py-2">ww</td>
+                                <td className="py-2">KM (BEMA 20a, BEL-II)</td>
+                              </tr>
+                              <tr className="border-t border-stone-100">
+                                <td className="py-2 font-bold">45</td>
+                                <td className="py-2">ww</td>
+                                <td className="py-2">KM (GOZ 2210)</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="flex justify-center gap-4 mt-10 font-sans">
+                          <button className="flex items-center gap-2 px-4 py-2 border border-stone-300 rounded hover:bg-stone-100 transition-colors text-sm">
+                            <Download className="w-4 h-4" />
+                            PDF herunterladen
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Sticky Action Bar */}
+                <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t border-slate-200 p-6 flex justify-between items-center z-10">
+                  <button className="px-6 py-3 font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                    Plan bearbeiten
+                  </button>
+                  <div className="flex gap-4">
+                    <Link 
+                      href="/patient-view"
+                      data-testid="link-patient-view"
+                      className="px-6 py-3 font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-xl transition-colors flex items-center gap-2"
+                    >
+                      <User className="w-5 h-5" />
+                      Patient zeigen
+                    </Link>
+                    <Link 
+                      href="/submitted"
+                      data-testid="link-submit"
+                      className="px-8 py-3 font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl shadow-lg shadow-teal-600/20 transition-all hover:-translate-y-0.5 flex items-center gap-2"
+                    >
+                      <Send className="w-5 h-5" />
+                      An Kasse senden
+                    </Link>
+                  </div>
+                </div>
+
               </motion.div>
             )}
 
@@ -407,3 +574,4 @@ export default function SessionPage() {
     </div>
   );
 }
+
