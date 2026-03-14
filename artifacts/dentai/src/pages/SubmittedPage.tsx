@@ -2,20 +2,16 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { Check, ArrowRight } from "lucide-react";
-import { patientData, treatmentAlternatives } from "@/data/mock";
+import { patientData, currentPlan } from "@/data/mock";
 import { resetSessionState } from "./SessionPage";
-import { getSelectedAlternative, resetSelectedAlternative } from "./PatientViewPage";
 import { formatCurrency } from "@/lib/utils";
 
 export default function SubmittedPage() {
   const [, navigate] = useLocation();
-  const selectedId = getSelectedAlternative();
-  const selectedPlan = treatmentAlternatives.find(p => p.id === selectedId) || treatmentAlternatives[1];
 
   const handleNextPatient = (e: React.MouseEvent) => {
     e.preventDefault();
     resetSessionState();
-    resetSelectedAlternative();
     navigate("/");
   };
 
@@ -57,15 +53,15 @@ export default function SubmittedPage() {
                 </div>
                 <div className="flex justify-between border-b border-slate-200 pb-3">
                   <span className="text-slate-500">Versorgungsart</span>
-                  <span className="font-medium text-teal-700">{selectedPlan.name}</span>
+                  <span className="font-medium text-teal-700">{currentPlan.name}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-200 pb-3">
                   <span className="text-slate-500">Material</span>
-                  <span className="font-medium text-slate-700">{selectedPlan.tagline}</span>
+                  <span className="font-medium text-slate-700">{currentPlan.tagline}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-200 pb-3">
                   <span className="text-slate-500">Eigenanteil</span>
-                  <span className="font-bold text-slate-900">{formatCurrency(selectedPlan.patient)}</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(currentPlan.patient)}</span>
                 </div>
                 <div className="flex justify-between pb-1">
                   <span className="text-slate-500">Bearbeitungszeit</span>

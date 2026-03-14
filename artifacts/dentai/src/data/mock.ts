@@ -26,7 +26,7 @@ export const processingSteps = [
   { id: 3, label: "BEMA/GOZ Codes werden zugeordnet..." },
   { id: 4, label: "Kassenleistung & Eigenanteil berechnet..." },
   { id: 5, label: "Regelvalidierung (Ausschlüsse, Frequenz)..." },
-  { id: 6, label: "Alternativen werden generiert..." }
+  { id: 6, label: "Behandlungsplan wird erstellt..." }
 ];
 
 export type TreatmentAlternative = {
@@ -95,6 +95,9 @@ export const treatmentAlternatives: TreatmentAlternative[] = [
     ]
   }
 ];
+
+// The single dentist-approved plan shown to the patient
+export const currentPlan = treatmentAlternatives[1]; // Vollkeramik — dentist decision
 
 export const treatmentPlan = [
   { pos: 1, desc: "Präparation Krone Zahn 34", code: "BEMA 20a", type: "GKV" },
